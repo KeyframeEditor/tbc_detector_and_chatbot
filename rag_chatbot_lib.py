@@ -28,7 +28,7 @@ def get_index(): #creates and returns an in-memory vector store to be used in th
     
     embeddings = BedrockEmbeddings() #create a Titan Embeddings client
     
-    pdf_path = "Factsheet-Country-Profile-Indonesia-2022.pdf" #assumes local PDF file with this name
+    pdf_path = "factsheet-tbc-indonesia.pdf" #assumes local PDF file with this name
 
     loader = PyPDFLoader(file_path=pdf_path) #load the pdf file
     
@@ -54,6 +54,19 @@ def get_memory(): #create memory for this chat session
     
     return memory
 
+def get_rag_image_response(memory, index, class_label): #chat client function
+    
+    llm = get_llm()
+    
+    conversation_with_retrieval = ConversationalRetrievalChain.from_llm(llm, index.vectorstore.as_retriever(), memory=memory, verbose=True)
+    
+    promptTemplate = "Jika saya terdeteksi hasil TBC " + class_label + " , apa yang harus saya lakukan?"
+    
+    chat_response = conversation_with_retrieval.invoke({"question": promptTemplate}) #pass the user message and summary to the model
+    
+    ResponseText = "Hasil TBC anda terdeteksi " + class_label + "\n" + chat_response['answer']
+    return ResponseText
+
 def get_rag_chat_response(input_text, memory, index): #chat client function
     
     llm = get_llm()
@@ -63,4 +76,3 @@ def get_rag_chat_response(input_text, memory, index): #chat client function
     chat_response = conversation_with_retrieval.invoke({"question": input_text}) #pass the user message and summary to the model
     
     return chat_response['answer']
-
